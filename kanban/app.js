@@ -229,9 +229,15 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function boot() {
     for (const c of COLUMNS) { c.el = document.querySelector(`[data-column="${c.id}"]`); }
     attachDropTargets();
     loadBoard();
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    // DOM already ready (defer missed DOMContentLoaded) — boot now.
+    boot();
+  }
 })();
