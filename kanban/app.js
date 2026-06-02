@@ -103,7 +103,9 @@
 
   function attachDropTargets() {
     for (const c of COLUMNS) {
-      const target = c.list;
+      const target = c.list || document.getElementById(`list-${c.id}`);
+      if (!target) continue;
+      c.list = target;
       target.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -230,7 +232,10 @@
   }
 
   function boot() {
-    for (const c of COLUMNS) { c.el = document.querySelector(`[data-column="${c.id}"]`); }
+    for (const c of COLUMNS) {
+      c.el = document.querySelector(`[data-column="${c.id}"]`);
+      c.list = document.getElementById(`list-${c.id}`);
+    }
     attachDropTargets();
     loadBoard();
   }
