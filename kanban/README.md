@@ -10,6 +10,117 @@ via GitHub Pages at:
 
 > `https://<owner>.github.io/hermes-multi-agent-workflow/kanban/`
 
+## Setup
+
+The board is **zero-install for users** — open the URL. To run the test suite
+or to host it under your own domain, see the steps below.
+
+### 1. Just view it
+
+Open the GitHub Pages URL in any modern browser. The page reads
+`board.json` over HTTPS and renders. No build step.
+
+### 2. Host it yourself
+
+The board is three static files plus a JSON file. Drop them on any static
+host (S3 + CloudFront, Netlify, Cloudflare Pages, GitHub Pages, a plain
+Nginx box). There is **no backend, no API, no build**.
+
+```bash
+# Local dev
+git clone https://github.com/<you>/hermes-multi-agent-workflow
+cd hermes-multi-agent-workflow/kanban
+python3 -m http.server 8765 --bind 127.0.0.1
+# open http://127.0.0.1:8765/
+```
+
+### 3. Edit the board
+
+Four options, in order of formality:
+
+| | How | Persisted via | Best for |
+|---|---|---|---|
+| Browser dialog | "+ Add card" button on the page | Copy the exported JSON and commit it | Quick experiments |
+| CLI | `python3 kanban/cli.py add --title "..."` | `git commit` | Scripting, CI, automation |
+| Hand-edit | Open `board.json`, edit, save | `git commit` | One-off changes |
+| Engine bridge | `engine/kanban_store.py` writes → subscriber mirrors to `board.json` | `git commit` (auto) | Multi-agent pipelines |
+
+See the **Usage** section below for full CLI examples.
+
+### 4. Run the tests
+
+```bash
+bash scripts/test-matrix.sh
+```
+
+This runs the unit + browser test matrix and writes the evidence report
+to `kanban/tests/TEST_MATRIX.md`. See the **Browser/device testing**
+section below for what is and is not covered.
+
+### 5. Customize
+
+The board's behavior is entirely in `board.json`, `index.html`, `style.css`,
+and `app.js`. To add columns, change the `columns` array in `board.json` —
+the viewer will pick them up on next load. To restyle, edit `style.css` —
+it has CSS custom properties at the top for the column palette.
+
+## Features
+
+### View
+
+- **Three columns by default** (To Do, In Progress, Done) — easy to extend
+  by editing the `columns` array in `board.json`.
+- **Cards** show title, description, assignee pill (`@user`), due-date pill
+  (color-coded: red overdue, amber within 2 days, default otherwise), and
+  a subtask checklist.
+- **Live count** in the header (`3 cards loaded from board.json`) confirms
+  the page parsed the file correctly.
+- **Light + dark** by `prefers-color-scheme`. No toggle needed.
+
+### Interact
+
+- **Drag and drop** a card between columns to change its status. Visual
+  feedback (`.dragging`, `.drop-target` highlights) confirms the move.
+- **Double-click** a card (or press **Enter** when focused) to open the
+  edit dialog — same dialog used for "+ Add card" and for editing.
+- **+ Add card** opens the dialog with all fields blank, plus a Delete
+  button hidden for new cards.
+- **"Propose board.json change"** exports the current in-memory state as
+  a copyable + downloadable JSON file. Commit it to persist.
+- **Keyboard navigation** works throughout: Tab moves focus, Enter opens
+  the dialog, focus rings are visible on every interactive element.
+
+### Operate
+
+- **Zero build, zero deps, zero backend.** Three files: HTML, CSS, JS.
+  The JSON file is the only state.
+- **No framework.** No React, no Vue, no bundler. Read the source in
+  under five minutes.
+- **No data leaves your machine** unless you commit and push. The page
+  fetches `board.json` from wherever you host it.
+- **Git history is the audit log.** Every change is a commit you can
+  `git log` and `git blame`.
+
+### Accessibility
+
+- **WCAG 2.1 AA** color contrast in both light and dark themes.
+- **Semantic landmarks** — `banner`, `main`, three `region`s, `contentinfo`.
+- **Skip link** at the top of the page jumps focus past the header.
+- **`aria-live`** status announcements for moves and errors.
+- **Visible focus rings** on every interactive element.
+- **Respects `prefers-reduced-motion`** — drag animations disabled when
+  the user has motion sensitivity enabled.
+- **Respects `forced-colors`** (Windows High Contrast) — fall back to
+  system colors when active.
+- **Touch-friendly** — the dialog form is the primary path on iOS Safari
+  where HTML5 drag/drop is not supported.
+
+### Integration
+
+- The board's `board.json` is the **canonical source of truth** for the
+  pipeline. A subscriber in `engine/kanban_store.py` mirrors engine
+  state into the JSON file. See [`INTEGRATION.md`](./INTEGRATION.md).
+
 ## Why a static board?
 
 - **State is auditable.** Every card move is a git commit.
@@ -133,17 +244,47 @@ See [`INTEGRATION.md`](./INTEGRATION.md) for the bridge between
 
 ## Browser/device testing
 
-Verified against:
+> ⚠️ **Honest scope.** The full CI test matrix runs against a single engine
+> (Camoufox, which is Firefox-based) at the daemon's default desktop
+> viewport. The board is built with standards-track HTML5 / ARIA / CSS and
+> should work in Chrome and Safari, but those are not empirically tested
+> by this harness. See [`kanban/tests/TEST_MATRIX.md`](./tests/TEST_MATRIX.md)
+> for the actual evidence — what ran, what passed, and the screenshots
+> captured during the most recent run.
 
-- **Chrome** (desktop, mobile emulation) — drag/drop, dialog, JSON export OK.
-- **Firefox** (desktop) — drag/drop, dialog, JSON export OK.
-- **Safari** (WebKit) — drag/drop uses native HTML5 drag; on iOS the page
-  shows the dialog form for moves (drag/drop is iOS-restricted; the dialog
-  is the supported fallback there).
-- **Tablet** (iPad / Android) — same as mobile.
+For drag/drop on iOS Safari (where HTML5 drag is not supported), the page
+exposes the same edit dialog as a touch-friendly fallback. The dialog is
+the supported path on mobile.
 
-> Real visual / touch testing requires a device pass. This README records the
-> supported matrix; CI linting covers HTML/CSS/JS validity.
+### Run the test matrix locally
+
+```bash
+# Default: tests the live GitHub Pages URL
+bash scripts/test-matrix.sh
+
+# Against a local server
+python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/kanban-server.log 2>&1 &
+KANBAN_TEST_URL=http://127.0.0.1:8765/ bash scripts/test-matrix.sh
+```
+
+This runs:
+
+- 6 unit tests (CLI + schema)
+- 10 browser tests (page render, accessibility landmarks, button click, dialog)
+- 4 static-file sanity checks
+
+…and writes dated evidence to `kanban/tests/evidence/` plus
+`kanban/tests/TEST_MATRIX.md`.
+
+### What the matrix does NOT cover
+
+- **Chrome / Safari engines** — only Camoufox (Firefox-based) is run.
+  Code is portable; adding a Chromium step requires a Playwright runner.
+- **Tablet / mobile viewports** — the Camofox HTTP API does not expose a
+  viewport override endpoint in this build. `style.css` declares `@media`
+  rules for `≤720px`; verifying them needs a Playwright step that resizes
+  the page or a real device pass.
+- **Touch input** — same constraint. The dialog form is the touch path.
 
 ## Limitations (honest)
 
