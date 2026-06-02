@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kanban — Hermes Multi-Agent Workflow</title>
+  <meta name="description" content="Static, accessible kanban board that lives in the hermes-multi-agent-workflow repository. State is committed to board.json.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="topbar" role="banner">
+    <h1 id="board-title">Kanban Board</h1>
+    <p class="subtitle" id="board-subtitle">Loading…</p>
+    <nav aria-label="Board tools" class="toolbar">
+      <button id="add-card-btn" type="button" class="btn primary" aria-haspopup="dialog">+ Add card</button>
+      <button id="commit-btn" type="button" class="btn" hidden>Propose board.json change</button>
+      <span id="status" role="status" aria-live="polite" class="status"></span>
+    </nav>
+  </header>
+
+  <main id="main" class="board" aria-labelledby="board-title">
+    <section class="column" data-column="todo" aria-labelledby="col-todo">
+      <h2 id="col-todo" class="column-title">To Do</h2>
+      <ol class="card-list" id="list-todo" aria-label="To Do cards"></ol>
+    </section>
+    <section class="column" data-column="in_progress" aria-labelledby="col-in-progress">
+      <h2 id="col-in-progress" class="column-title">In Progress</h2>
+      <ol class="card-list" id="list-in_progress" aria-label="In Progress cards"></ol>
+    </section>
+    <section class="column" data-column="done" aria-labelledby="col-done">
+      <h2 id="col-done" class="column-title">Done</h2>
+      <ol class="card-list" id="list-done" aria-label="Done cards"></ol>
+    </section>
+  </main>
+
+  <!-- Add/Edit card dialog -->
+  <dialog id="card-dialog" aria-labelledby="dialog-title">
+    <form id="card-form" method="dialog">
+      <h2 id="dialog-title">Add / edit card</h2>
+      <label for="f-title">Title <span aria-hidden="true">*</span></label>
+      <input id="f-title" name="title" type="text" required maxlength="120" autocomplete="off">
+
+      <label for="f-description">Description</label>
+      <textarea id="f-description" name="description" rows="3" maxlength="2000"></textarea>
+
+      <label for="f-assignee">Assignee</label>
+      <input id="f-assignee" name="assignee" type="text" maxlength="60" placeholder="@handle or name">
+
+      <label for="f-due">Due date</label>
+      <input id="f-due" name="due" type="date">
+
+      <label for="f-column">Column</label>
+      <select id="f-column" name="column">
+        <option value="todo">To Do</option>
+        <option value="in_progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+
+      <fieldset class="subtasks-fieldset">
+        <legend>Subtasks (one per line)</legend>
+        <textarea id="f-subtasks" name="subtasks" rows="4" placeholder="- [ ] subtask one
+- [ ] subtask two"></textarea>
+      </fieldset>
+
+      <input type="hidden" id="f-id" name="id">
+
+      <menu class="dialog-actions">
+        <button type="button" id="delete-btn" class="btn danger" hidden>Delete</button>
+        <button type="button" id="cancel-btn" class="btn">Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Commit proposal dialog -->
+  <dialog id="commit-dialog" aria-labelledby="commit-title">
+    <h2 id="commit-title">Propose board.json change</h2>
+    <p>This kanban board is read-only from the browser. To persist changes, copy the JSON snippet below and either commit it directly via <code>git</code> or open a pull request.</p>
+    <p><strong>CLI shortcut:</strong> <code>python3 kanban/cli.py apply &lt; /tmp/board.json</code></p>
+    <label for="snippet">board.json (full file)</label>
+    <textarea id="snippet" rows="14" readonly></textarea>
+    <menu class="dialog-actions">
+      <button type="button" id="copy-btn" class="btn">Copy to clipboard</button>
+      <button type="button" id="download-btn" class="btn">Download board.json</button>
+      <button type="button" id="close-commit-btn" class="btn primary">Close</button>
+    </menu>
+  </dialog>
+
+  <footer class="footer" role="contentinfo">
+    <p>
+      State: <a href="board.json" id="raw-link">board.json</a> ·
+      Edit via <a href="https://github.com/v4mpire77/hermes-multi-agent-workflow/tree/main/kanban" id="repo-link">repo</a> ·
+      See <a href="README.md" id="docs-link">README</a>
+    </p>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

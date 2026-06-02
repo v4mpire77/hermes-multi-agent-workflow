@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "title": "Hermes Multi-Agent Workflow — Kanban",
+  "description": "A static, accessible, GitHub-tracked kanban board for the hermes-multi-agent-workflow template. State is committed to this file; the HTML viewer reads it.",
+  "columns": [
+    {
+      "id": "todo",
+      "title": "To Do"
+    },
+    {
+      "id": "in_progress",
+      "title": "In Progress"
+    },
+    {
+      "id": "done",
+      "title": "Done"
+    }
+  ],
+  "cards": [
+    {
+      "id": "c_seed_intake",
+      "title": "Wire scout intake → board",
+      "description": "Source 1: cron-driven scout that runs every 6h, writes reports to reports/, TriageEngine parses them and creates intake cards here.",
+      "assignee": "orchestrator",
+      "due_date": null,
+      "column": "todo",
+      "subtasks": [
+        {
+          "done": false,
+          "text": "Configure cron schedule in triage.yaml"
+        },
+        {
+          "done": false,
+          "text": "Verify scout profile has kanban toolset enabled"
+        },
+        {
+          "done": false,
+          "text": "Run end-to-end: scout → intake → first card"
+        }
+      ],
+      "order": 1,
+      "updated_at": "2026-06-02T00:00:00Z"
+    },
+    {
+      "id": "c_seed_research",
+      "title": "Build research-lane fan-out",
+      "description": "Three parallel research lanes (web, repo, discourse) feed the rubric. Their outputs land in this column before the human gate.",
+      "assignee": "researcher",
+      "due_date": "2026-06-09",
+      "column": "in_progress",
+      "subtasks": [
+        {
+          "done": true,
+          "text": "Add research_lanes entry to triage.yaml"
+        },
+        {
+          "done": true,
+          "text": "Confirm hermes-researcher profile exists"
+        },
+        {
+          "done": false,
+          "text": "Smoke-test one item through all three lanes"
+        }
+      ],
+      "order": 2,
+      "updated_at": "2026-06-02T00:00:00Z"
+    },
+    {
+      "id": "c_seed_done",
+      "title": "Initial board seed (this card)",
+      "description": "Seed card demonstrating the schema: title, description, assignee, due date, subtask checklist, and column placement. Edit via the UI or `python3 kanban/cli.py`.",
+      "assignee": "meep",
+      "due_date": "2026-06-02",
+      "column": "done",
+      "subtasks": [
+        {
+          "done": true,
+          "text": "Three columns: To Do, In Progress, Done"
+        },
+        {
+          "done": true,
+          "text": "Cards with title, description, assignee, due date, subtasks"
+        },
+        {
+          "done": true,
+          "text": "Integration scaffolding with engine/kanban_store.py"
+        }
+      ],
+      "order": 3,
+      "updated_at": "2026-06-02T00:00:00Z"
+    }
+  ],
+  "updated_at": "2026-06-02T04:10:59Z"
+}
